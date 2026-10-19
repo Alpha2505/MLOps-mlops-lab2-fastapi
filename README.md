@@ -2,7 +2,7 @@
 
 This lab is based on the course's FastAPI lab and serves a scikit-learn model as a REST API with FastAPI and uvicorn. Instead of the Iris dataset from the course lab, I used the UCI Wine dataset, which has 13 chemical measurements per wine and 3 cultivar classes.
 
-## Changes from the course lab
+## Modifications from Original Lab
 
 - **Dataset:** Wine (13 features, 3 classes) instead of Iris (4 features).
 - **Model:** Random Forest with 200 trees instead of a Decision Tree. The saved file also stores the class names, feature order and test accuracy.

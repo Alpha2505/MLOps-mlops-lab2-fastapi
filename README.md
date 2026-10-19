@@ -1,28 +1,40 @@
-# FastAPI Lab 1: Wine Cultivar Classifier API
+# MLOps Lab 2 - FastAPI Wine Cultivar Classifier API
 
-Serves a scikit-learn Random Forest trained on the UCI Wine dataset as a REST API using FastAPI and uvicorn.
+This lab is based on the course's FastAPI lab and serves a scikit-learn model as a REST API with FastAPI and uvicorn. Instead of the Iris dataset from the course lab, I used the UCI Wine dataset, which has 13 chemical measurements per wine and 3 cultivar classes.
 
-## How this differs from the course lab
+## Changes from the course lab
 
-<!-- Write this section in your own words. Points you can cover: -->
-| | Course lab | This repo |
-|---|---|---|
-| Dataset | Iris (4 features) | Wine (13 chemical features, 3 cultivars) |
-| Model | Decision Tree | Random Forest (200 trees), saved with metadata |
-| Endpoints | `/predict` | `/health`, `/model-info`, `/predict`, `/predict/batch` |
-| Response | class id | class id, class name, confidence |
-| Validation | types only | non-negative constraints, batch size limits (400), 503 if model missing |
-| Tests | none | pytest suite using FastAPI `TestClient` |
+- **Dataset:** Wine (13 features, 3 classes) instead of Iris (4 features).
+- **Model:** Random Forest with 200 trees instead of a Decision Tree. The saved file also stores the class names, feature order and test accuracy.
+- **Endpoints:** added `/health`, `/model-info` and `/predict/batch` on top of `/predict`.
+- **Response:** `/predict` returns the class id, class name and confidence instead of just the class id.
+- **Validation:** all features must be >= 0 (422 otherwise), batch requests must have 1 to 50 samples (400 otherwise), and the API returns 503 if the model hasn't been trained yet.
+- **Tests:** a pytest suite in `tests/` using FastAPI's `TestClient`.
+
+## Project structure
+
+```
+├── assets/            screenshots
+├── model/             wine_model.pkl is saved here by train.py
+├── src/
+│   ├── data.py        loads the dataset, train/test split, feature order
+│   ├── train.py       trains and saves the model
+│   ├── predict.py     loads the model and makes predictions
+│   └── main.py        FastAPI app and endpoints
+├── tests/             API tests
+├── requirements.txt
+└── README.md
+```
 
 ## Setup
 
 ```bash
-python -m venv fastapi_lab1_env
-source fastapi_lab1_env/bin/activate      # Windows: fastapi_lab1_env\Scripts\activate
+python3 -m venv fastapi_lab1_env
+source fastapi_lab1_env/bin/activate
 pip install -r requirements.txt
 ```
 
-## Train
+## Train the model
 
 ```bash
 cd src
@@ -32,21 +44,21 @@ python train.py
 ## Run the API
 
 ```bash
-uvicorn main:app --reload      # from inside src/
+uvicorn main:app --reload     # run from inside src/
 ```
 
-Open http://127.0.0.1:8000/docs to try the endpoints.
+Then open http://127.0.0.1:8000/docs.
 
 ## Endpoints
 
-| Method | Path | Description |
+| Method | Path | What it does |
 |---|---|---|
-| GET | `/health` | Liveness check |
-| GET | `/model-info` | Model type, classes, features, test accuracy |
-| POST | `/predict` | Predict one wine sample |
-| POST | `/predict/batch` | Predict up to 50 samples at once |
+| GET | `/health` | Checks the server is running |
+| GET | `/model-info` | Model type, classes, features and test accuracy |
+| POST | `/predict` | Predicts the cultivar for one wine sample |
+| POST | `/predict/batch` | Predicts up to 50 samples in one request |
 
-Example request body for `/predict`:
+Example body for `/predict`:
 
 ```json
 {
@@ -57,12 +69,32 @@ Example request body for `/predict`:
 }
 ```
 
+## Screenshots
+
+**/health**
+
+![Health check](assets/HealthCheck.png)
+
+**/model-info**
+
+![Model info](assets/ModelInfo.png)
+
+**/predict** (first sample of the dataset, predicted as class_0)
+
+![Predict](assets/Predict.png)
+
+**/predict/batch**
+
+![Predict batch](assets/PredictBatch.png)
+
 ## Tests
 
 ```bash
-pytest -v      # from the repo root
+pytest -v     # run from the repo root
 ```
 
-## Screenshots
+All 9 tests pass. They cover the health and model-info endpoints, a valid prediction, missing and negative fields (422), a string number being converted to float, and batch size limits (400).
 
-<!-- Add screenshots of /docs and a successful /predict response to assets/ and link them here. -->
+## Results
+
+The model gets 100% accuracy on the test set (36 samples). The Wine dataset is small and the three cultivars separate well on features like proline and flavanoids, so this is expected rather than a bug.
